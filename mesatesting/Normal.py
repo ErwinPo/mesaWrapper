@@ -33,6 +33,8 @@ class Bot(Agent):
     free = 0
     loaded = 1
 
+    totrash = 0
+    topos = 1
     def __init__(self, model, pos, level, behaviour, tamano, incinerador, matrix):
         super().__init__(model.next_id(), model)
         #
@@ -52,6 +54,7 @@ class Bot(Agent):
         self.pos = pos
         self.path = []
         #
+        self.todestination = None
         self.trash = None
         self.destino = None
         self.condition = self.free
@@ -139,14 +142,16 @@ class Bot(Agent):
         return False
 
     def sweep(self):
-        neighbors = self.model.grid.get_neighborhood(self.pos, moore=True, radius=2)
-        for i in range(len(neighbors)):
-            trash = list(filter(lambda a: type(a) == Trash, self.model.grid.get_cell_list_contents(neighbors[i])))
-            if len(trash) > 0:
-                self.search = self.found
-                j = randrange(0, len(trash))
-                #print("Trash found at:" + str(trash[i].pos))
-                return trash[j].pos
+        for i in range(2):
+            neighbors = self.model.grid.get_neighborhood(self.pos, moore=True, radius=i)
+            for j in range(len(neighbors)):
+                trash = list(filter(lambda a: type(a) == Trash, self.model.grid.get_cell_list_contents(neighbors[j])))
+                if len(trash) > 0:
+                    self.search = self.found
+                    k = randrange(0, len(trash))
+                    #print("Trash found at:" + str(trash[i].pos))
+                    print("found at: " + str(i))
+                    return trash[k].pos
 
     def posicion_basura(self, x, y):
         contenido = self.grid.get_cell_list_contents((x, y))
@@ -211,8 +216,12 @@ class Bot(Agent):
                         print(self.destino)
                         #self.matrix[self.destino[0]][self.destino[1]] = 0
                         #print(self.matrix[self.destino[0]][self.destino[1]])
-                        self.move_using_pathfinding(self.destino, self.matrix)
-                        #self.movetopos(self.destino[0], self.destino[1])
+                        #self.move_using_pathfinding(self.destino, self.matrix)
+                        if self.search == self.busy:
+                            self.move_using_pathfinding(self.destino, self.matrix)
+                        else:
+                            self.movetopos(self.destino[0], self.destino[1])
+
                     elif self.pos == (self.destino[0], self.destino[1]):
                         self.destino = self.initialpos
                         self.search = self.busy
@@ -222,7 +231,7 @@ class Bot(Agent):
                 elif self.search == self.searching:
                     if self.sweep():
                         self.destino = self.sweep()
-
+                        self.todestination = self.totrash
                     else:
                         if self.pos[0] == self.tamano - 1 or self.pos[1] == self.tamano - 1:
                             self.behaviour = self.patrolling
@@ -244,8 +253,8 @@ class Bot(Agent):
             elif self.behaviour == self.patrolling:
                 if self.destino != None:
                     if self.pos != (self.destino[0], self.destino[1]):
-                        self.move_using_pathfinding((self.destino[0], self.destino[1]), self.matrix)
-                        #self.movetopos(self.destino[0], self.destino[1])
+                        #self.move_using_pathfinding((self.destino[0], self.destino[1]), self.matrix)
+                        self.movetopos(self.destino[0], self.destino[1])
                     elif self.pos == (self.destino[0], self.destino[1]):
                         self.destino = self.initialpos
                         self.search = self.busy
@@ -255,6 +264,7 @@ class Bot(Agent):
                 elif self.search == self.searching:
                     if self.sweep():
                         self.destino = self.sweep()
+                        self.todestination = self.totrash
                 if self.destino == None:
                     if self.loop == (1, 0, 0, 0):
                         if self.pos[0] == (self.tamano - self.tamano + self.loopcounter):
@@ -289,6 +299,7 @@ class Bot(Agent):
             if self.pos == self.center:
                 self.trash = None
                 self.condition = self.free
+                #self.destino = self.sweep()
             elif self.pos in self.centercells:
                 #print("incinerador:" + str(self.incinerador.condition))
                 if self.incinerador.condition == self.incinerador.free:
@@ -394,7 +405,7 @@ class Floor(Model):
 
         arreglo_bot = ((tamaño - 1, tamaño - 1), (0, tamaño - 1), (0, 0), (tamaño - 1, 0), (tamaño // 2, tamaño - 1),
                        (tamaño // 2, 0))  # Convert set to list
-        for i in range(1):
+        for i in range(6):
             pos = arreglo_bot[i]
             #print(pos)
             ghost = Bot(self, pos, i, Bot.sweeping, tamaño, center, self.matrix)
