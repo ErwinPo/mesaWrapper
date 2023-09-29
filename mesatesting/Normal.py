@@ -89,20 +89,7 @@ class Bot(Agent):
     # def update_grid(self):
     ###
 
-    """
-    def print_grid(self):
-        size_x, size_y = self.grid.width, self.grid.height
 
-        for y in range(size_y):
-            row = " "
-            for x in range(size_x):
-                cell_contents = self.grid.get_cell_list_contents((x, y))
-                if any(isinstance(agent, Trash) for agent in cell_contents):
-                    row += "1"
-                else:
-                    row += "0"
-            print(row)
-    """
 
 
     #############
@@ -184,6 +171,7 @@ class Bot(Agent):
     def set_path(self, path):
         self.path = path
 
+
     def moves(self):
         if self.path:
             next_step = self.path[0]
@@ -208,9 +196,12 @@ class Bot(Agent):
             self.model.grid.move_agent(self, next_pos)
 
     def step(self):
+        #self.matrix = self.mesa_A_matrix(self.model.grid, self.model.grid.width, self.model.grid.height)
         self.matrix = self.model.grid_to_matrix()
         #matrix = self.model.matrix  #Access the matrix from the model (Floor)
         print(self.matrix)
+
+
 
         if self.trash == None:
             if self.behaviour == self.sweeping:
@@ -289,9 +280,10 @@ class Bot(Agent):
                 if self.incinerador.condition == self.incinerador.free:
                     if self.incinerador.choosebot():
                         #Elimina basura pero se bugea
-                        #self.movetopos(self.center[0], self.center[1])
-                        #self.trash.move(self.pos[0], self.pos[1])
+
                         self.move_using_pathfinding(self.center,self.matrix)
+                        self.movetopos(self.center[0], self.center[1])
+                        self.trash.move(self.pos[0], self.pos[1])
                         return
                 return
             else:
@@ -408,28 +400,25 @@ class Floor(Model):
         self.grid.remove_agent(agent)
         self.trash_burned += 1
 
+
     def grid_to_matrix(self):
         ancho, alto = self.grid.width, self.grid.height
         matrix = []
 
-        for y in reversed(range(alto)):
+        for y in (range(alto)):
             row = []
             for x in range(ancho):
                 cell_contents = self.grid.get_cell_list_contents((x, y))
                 if any(isinstance(agent, Trash) for agent in cell_contents):
-                    row.append(1)
+                    row.append(0)
                 #elif any(isinstance(agent, Bot) for agent in cell_contents):
                 #    row.append('B')
                 else:
-                    row.append(0)
+                    row.append(1)
             matrix.append(row)
             print(row)
         return matrix
 
-
-    def cell_has_trash(self, x, y):
-        cell_contents = self.grid.get_cell_list_contents((x, y))
-        return any(isinstance(agent, Trash) for agent in cell_contents)
 
 
     def print_grid(self):
