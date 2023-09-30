@@ -307,7 +307,7 @@ class Bot(Agent):
                         #self.move_using_pathfinding((self.pos[0], (self.tamano - 1 - self.loopcounter)), self.matrix)
                         self.movetopos(self.pos[0], (self.tamano - 1 - self.loopcounter))
 
-                    if self.loopcounter > 49: self.behaviour = self.idle
+                    if self.loopcounter > 60: self.behaviour = self.idle
                 #print("patrolling")
         else:
             if self.pos == self.center:
