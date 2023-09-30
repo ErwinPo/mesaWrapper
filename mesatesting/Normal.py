@@ -7,7 +7,7 @@ from mesa.space import MultiGrid
 from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.UserParam import Checkbox
 from random import randrange
-
+from random import random
 from mesa.datacollection import DataCollector
 from mesa.visualization.modules import ChartModule
 
@@ -142,15 +142,17 @@ class Bot(Agent):
         return False
 
     def sweep(self):
+        
         for i in range(2):
-            neighbors = self.model.grid.get_neighborhood(self.pos, moore=True, radius=i)
+            #print("iteration" + str(i))
+            neighbors = self.model.grid.get_neighborhood(self.pos, moore=True, radius=i+1)
             for j in range(len(neighbors)):
                 trash = list(filter(lambda a: type(a) == Trash, self.model.grid.get_cell_list_contents(neighbors[j])))
                 if len(trash) > 0:
                     self.search = self.found
                     k = randrange(0, len(trash))
                     #print("Trash found at:" + str(trash[i].pos))
-                    print("found at: " + str(i))
+                    #print("found at: " + str(i))
                     return trash[k].pos
 
     def posicion_basura(self, x, y):
@@ -187,7 +189,7 @@ class Bot(Agent):
                 self.model.grid.move_agent(self, next_step)
 
     def move_using_pathfinding(self, destination,matrix):
-        print(destination)
+        #print(destination)
         grid = Grid(matrix=matrix)
         (x, y) = self.pos
         start = grid.node(x, y)
@@ -196,7 +198,7 @@ class Bot(Agent):
 
         finder = AStarFinder(diagonal_movement=DiagonalMovement.always)
         path, _ = finder.find_path(start, end, grid)
-        print(path)
+        #print(path)
         if len(path) > 1:
             next_pos = path[1]
             self.model.grid.move_agent(self, next_pos)
@@ -213,7 +215,7 @@ class Bot(Agent):
             if self.behaviour == self.sweeping:
                 if self.destino != None:
                     if self.pos != (self.destino[0], self.destino[1]):
-                        print(self.destino)
+                        #print(self.destino)
                         #self.matrix[self.destino[0]][self.destino[1]] = 0
                         #print(self.matrix[self.destino[0]][self.destino[1]])
                         #self.move_using_pathfinding(self.destino, self.matrix)
@@ -254,7 +256,11 @@ class Bot(Agent):
                 if self.destino != None:
                     if self.pos != (self.destino[0], self.destino[1]):
                         #self.move_using_pathfinding((self.destino[0], self.destino[1]), self.matrix)
-                        self.movetopos(self.destino[0], self.destino[1])
+                        #self.movetopos(self.destino[0], self.destino[1])
+                        if self.search == self.busy:
+                            self.move_using_pathfinding(self.destino, self.matrix)
+                        else:
+                            self.movetopos(self.destino[0], self.destino[1])
                     elif self.pos == (self.destino[0], self.destino[1]):
                         self.destino = self.initialpos
                         self.search = self.busy
@@ -266,6 +272,8 @@ class Bot(Agent):
                         self.destino = self.sweep()
                         self.todestination = self.totrash
                 if self.destino == None:
+                    if randrange(0,100) < 5:
+                        self.loopcounter+=1
                     if self.loop == (1, 0, 0, 0):
                         if self.pos[0] == (self.tamano - self.tamano + self.loopcounter):
                             self.loopcounter += 1
@@ -293,10 +301,11 @@ class Bot(Agent):
                         #self.move_using_pathfinding((self.pos[0], (self.tamano - 1 - self.loopcounter)), self.matrix)
                         self.movetopos(self.pos[0], (self.tamano - 1 - self.loopcounter))
 
-                    if self.loopcounter > 13: self.behaviour = self.idle
+                    if self.loopcounter > 49: self.behaviour = self.idle
                 #print("patrolling")
         else:
             if self.pos == self.center:
+                self.trash.state = 1
                 self.trash = None
                 self.condition = self.free
                 #self.destino = self.sweep()
@@ -305,14 +314,15 @@ class Bot(Agent):
                 if self.incinerador.condition == self.incinerador.free:
                     if self.incinerador.choosebot():
                         #Elimina basura pero se bugea
-
+                        self.trash.state = 1
+                        print(str(self.trash.state))
                         self.move_using_pathfinding(self.center,self.matrix)
                         #self.movetopos(self.center[0], self.center[1])
                         self.trash.move(self.pos[0], self.pos[1])
                         return
                 return
             else:
-                print(self.center)
+                #print(self.center)
                 self.move_using_pathfinding(self.center,self.matrix)
                 self.trash.move(self.pos[0], self.pos[1])
 
@@ -321,7 +331,7 @@ class Bot(Agent):
 
 
 
-class incinerador(Agent):
+class Incinerador(Agent):
     free = 0
     visit = 1
     burning = 2
@@ -340,6 +350,7 @@ class incinerador(Agent):
         trash = list(filter(lambda a: type(a) == Trash, self.model.grid.get_cell_list_contents(self.pos)))
         if len(trash) == 1:
             self.trash = trash[0]
+            self.trash.state = 1
             #print("adgfdghfgfdsfdfsdgfffffffffffffffffffffffffffffffffffffssssssssssss")
             return True
         return False
@@ -351,6 +362,7 @@ class incinerador(Agent):
 
     def step(self):
         if self.checktrash():
+            
             self.world.deleteagent(self.trash)
             self.condition = self.visit
             #print("burned trash")
@@ -364,13 +376,13 @@ class incinerador(Agent):
 class Trash(Agent):
     STATIC = 0
     MOVING = 1
-
+    
     def __init__(self, model, pos):
         super().__init__(model.next_id(), model)
         self.condition = self.STATIC
         self.pos = pos
         self.bot = None
-
+        self.state = 0
     def move(self, x, y):
         self.condition = self.MOVING
         self.model.grid.move_agent(self, (x, y))
@@ -398,7 +410,7 @@ class Floor(Model):
             {"Get_burned": "trash_burned"}
         )
 
-        center = incinerador(self, (tamaño // 2, tamaño // 2), self)
+        center = Incinerador(self, (tamaño // 2, tamaño // 2), self)
         self.grid.place_agent(center, center.pos)
         self.schedule.add(center)
         #print(center.pos)
@@ -484,12 +496,12 @@ def agent_portrayal(agent):
             portrayal = {"Shape": "robot.png", "Layer": 1}
         elif agent.condition == Bot.free:
             portrayal = {"Shape": "ghost.png", "Layer": 1}
-    elif isinstance(agent, incinerador):
-        if agent.condition == incinerador.free:  # GREEN
+    elif isinstance(agent, Incinerador):
+        if agent.condition == Incinerador.free:  # GREEN
             portrayal = {"Shape": "circle", "Filled": "true", "Color": "yellow", "r": 0.75, "Layer": 0}
-        elif agent.condition == incinerador.burning:  # RED -- MORADO
+        elif agent.condition == Incinerador.burning:  # RED -- MORADO
             portrayal = {"Shape": "circle", "Filled": "true", "Color": "purple", "r": 0.75, "Layer": 0}
-        if agent.condition == incinerador.visit:  # BLUE
+        if agent.condition == Incinerador.visit:  # BLUE
             portrayal = {"Shape": "circle", "Filled": "true", "Color": "blue", "r": 0.75, "Layer": 0}
     else:
         portrayal = {}

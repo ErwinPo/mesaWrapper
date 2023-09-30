@@ -1,10 +1,10 @@
 import flask
 from flask.json import jsonify
 import uuid
-from robot import Floor
-from robot import Bot
-from robot import Trash
-from robot import Incinerador
+from robot2 import Floor
+from robot2 import Bot
+from robot2 import Trash
+from robot2 import Incinerador
 games = {}
 
 app = flask.Flask(__name__)
@@ -21,7 +21,7 @@ def create():
         if isinstance(ghost, Bot):
             bots.append({"id": int(ghost.unique_id), "x": ghost.pos[0], "z": ghost.pos[1], "type": "bot"})
         elif isinstance(ghost, Trash):
-            trash.append({"id": int(ghost.unique_id), "x": ghost.pos[0], "z": ghost.pos[1],  "type": "trash"})
+            trash.append({"id": int(ghost.unique_id), "x": ghost.pos[0], "z": ghost.pos[1],  "state": ghost.state})
         elif isinstance(ghost, Incinerador):
             incinerador.append({"id": int(ghost.unique_id), "x": ghost.pos[0], "z": ghost.pos[1],  "type": "incinerador"})
     return jsonify({"bots": bots, "trash": trash, "incinerador": incinerador, 'location': f"/games/{id}"}) , 201, {'location': f"/games/{id}"}
@@ -36,10 +36,10 @@ def queryState(id):
     incinerador = []
     for ghost in model.schedule.agents:
         if isinstance(ghost, Bot):
-            bots.append({"id": int(ghost.unique_id), "x": ghost.pos[0], "z": ghost.pos[1], "type": "bot"})
+            bots.append({"id": int(ghost.unique_id), "x": ghost.pos[0], "z": ghost.pos[1]})
         elif isinstance(ghost, Trash):
-            trash.append({"id": int(ghost.unique_id), "x": ghost.pos[0], "z": ghost.pos[1],  "type": "trash"})
+            trash.append({"id": int(ghost.unique_id), "x": ghost.pos[0], "z": ghost.pos[1],  "state": ghost.state})
         elif isinstance(ghost, Incinerador):
-            incinerador.append({"id": int(ghost.unique_id), "x": ghost.pos[0], "z": ghost.pos[1],  "type": "incinerador"})
+            incinerador.append({"id": int(ghost.unique_id), "x": ghost.pos[0], "z": ghost.pos[1]})
     return jsonify({"bots": bots, "trash": trash, "incinerador": incinerador})
 app.run()

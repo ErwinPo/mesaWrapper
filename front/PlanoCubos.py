@@ -9,6 +9,8 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
+from random import randrange
+
 # Se carga el archivo de la clase Cubo
 from Cubo import Cubo
 
@@ -58,7 +60,7 @@ pygame.init()
 
 cubos = {}
 basuras = {}
-incinerador = {}
+burner = {}
 
 for agent in bots:
     cubo = Cubo(agent["x"], agent["z"])
@@ -67,6 +69,10 @@ for agent in bots:
 for agent in trash:
     basura = Cubo(agent["x"], agent["z"])
     basuras[agent["id"]] = basura
+
+for agent in incinerador:
+    incinerator = Cubo(agent["x"]-320, agent["z"]-320)
+    burner[agent["id"]] = incinerator
 
 def Init():
     pygame.display.set_mode(
@@ -83,11 +89,23 @@ def Init():
     glClearColor(0,0,0,0)
     glEnable(GL_DEPTH_TEST)
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+
+    glLightfv(GL_LIGHT0, GL_POSITION,  (-40, 200, 100, 0.0))
+    glLightfv(GL_LIGHT0, GL_AMBIENT, (1., 1, 1, 1.0))
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, (0.5, 0.5, 0.5, 1.0))
+    glEnable(GL_LIGHT0)
+    glEnable(GL_LIGHTING)
+    glEnable(GL_COLOR_MATERIAL)
+    glEnable(GL_DEPTH_TEST)
+    glShadeModel(GL_SMOOTH)           # most obj files expect to be smooth-shaded
+
     
     for cubo in cubos.values():
-        cubo.loadmodel("Car.obj")
+        cubo.loadmodel("R2D2.obj")
     for basura in basuras.values():
-        basura.loadmodel("Crate1.obj")
+        basura.loadmodel("coin.obj")
+    for incinerator in burner.values():
+        incinerator.loadmodel("Big Treasure Chest.obj")
 
 def display():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -101,20 +119,23 @@ def display():
     glEnd()
     #Se dibuja cubos
     for cubo in cubos.values():
-        cubo.generate()
+        cubo.generate(30, 180)
     for basura in basuras.values():
-        basura.generate()
-
+        if basura.valid == 0:
+            basura.generate(1, randrange(1,10))
+    for incinerator in burner.values():
+        incinerator.generate(0.7, 180)
+    
     response = requests.get(URL_BASE + LOCATION)
     elementos = response.json()
     bots = elementos["bots"]
     trash = elementos["trash"]
-
+    
     for agent in bots:
         cubos[agent["id"]].update(agent["x"] * 20 - 160, agent["z"] * 20 - 160)
     for agent in trash:
         basuras[agent["id"]].update(agent["x"] * 20 - 160, agent["z"] * 20 - 160)
-
+        basuras[agent["id"]].updatevalid(agent["state"])
 done = False
 Init()
 while not done:

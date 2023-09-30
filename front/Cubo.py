@@ -18,7 +18,7 @@ import math
 from objloader import *
 
 class Cubo:
-    
+    valid = 0
     subiendo = 0
     bajando = 1
     model = None
@@ -34,7 +34,7 @@ class Cubo:
         self.angulo = 0
         self.direction = (0, 0, 1)  #Dirección inicial
         self.objetivo_direction = (0, 0, 1)  
-  
+        self.valid = 0
 
         
         #Se inicializan las coordenadas de los vertices del cubo
@@ -82,6 +82,18 @@ class Cubo:
         #Se cambia la magnitud del vector dirección con la variable vel
         self.velocidad = velocidad
         
+    def generate(self, size, facing):
+        #global obj
+        glPushMatrix()
+        glTranslatef(self.Position[0], self.Position[1], self.Position[2])
+        glScaled(size,size,size)
+        glRotate(90,0,0,1)
+        glRotate(90,0,1,0)
+        glRotate(facing,0,0,1)
+        #self.rotar()
+        self.obj.render()
+        glPopMatrix()
+
     def loadmodel(self, model):
         self.obj = OBJ(model, swapyz=True)
         self.obj.generate()
@@ -90,13 +102,5 @@ class Cubo:
         self.Position[0] = new_x
         self.Position[2] = new_z
 
-    def generate(self):
-        #global obj
-        glPushMatrix()
-        glTranslatef(self.Position[0], self.Position[1], self.Position[2])
-        glScaled(10,10,10)
-        glRotate(90,0,0,1)
-        glRotate(90,0,1,0)
-        #self.rotar()
-        self.obj.render()
-        glPopMatrix()
+    def updatevalid(self,value):
+        self.valid = value
