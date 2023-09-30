@@ -68,7 +68,7 @@ class Bot(Agent):
         self.loop = (1, 0, 0, 0)
         self.loopcounter = 0
         self.centercells = self.model.grid.get_neighborhood(self.incinerador.pos, moore=True, radius=1)
-
+        
         #self.matrix = None
 
     def set_matrix(self, matrix):
@@ -206,6 +206,7 @@ class Bot(Agent):
             self.model.grid.move_agent(self, next_pos)
 
     def step(self):
+
         #self.matrix = self.mesa_A_matrix(self.model.grid, self.model.grid.width, self.model.grid.height)
         self.matrix = self.model.grid_to_matrix()
         #matrix = self.model.matrix  #Access the matrix from the model (Floor)
@@ -325,10 +326,13 @@ class Bot(Agent):
                         #self.movetopos(self.center[0], self.center[1])
                         if self.trash != None:
                             self.trash.move(self.pos[0], self.pos[1])
+                            self.trash.state = 1 
                         return
                 return
             else:
                 #print(self.center)
+                if self.trash.pos in self.centercells:
+                    self.trash.state = 1 
                 self.move_using_pathfinding(self.center,self.matrix)
                 if self.trash != None:
                     self.trash.move(self.pos[0], self.pos[1])
@@ -370,6 +374,7 @@ class Incinerador(Agent):
     def step(self):
         if self.checktrash():
             if isinstance(self.trash, Trash):
+                self.trash.state = 1
                 self.world.deleteagent(self.trash)
                 self.condition = self.visit
             #print("burned trash")

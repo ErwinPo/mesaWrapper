@@ -122,7 +122,7 @@ def display():
         cubo.generate(30, 180)
     for basura in basuras.values():
         if basura.valid == 0:
-            basura.generate(1, randrange(1,10))
+            basura.generate(1, randrange(1,15))
     for incinerator in burner.values():
         incinerator.generate(0.7, 180)
     
@@ -136,6 +136,8 @@ def display():
     for agent in trash:
         basuras[agent["id"]].update(agent["x"] * 20 - 160, agent["z"] * 20 - 160)
         basuras[agent["id"]].updatevalid(agent["state"])
+    for agent in incinerador:
+        burner[agent["id"]].update(agent["x"] * 20 - 160, agent["z"] * 20 - 160)
 done = False
 Init()
 while not done:
