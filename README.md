@@ -8,4 +8,4 @@ En otra terminal acceder al directorio front y ejecutar PlanoCubos.py
 - cd front
 - python3 PlanoCubos.py
 
-**Asegurarse de correr en un ambiente conda que contenga las extensiones de  MESA y OpenGL necesarias.**
+**Aviso: Asegurarse de correr en un ambiente conda que contenga las extensiones de  MESA y OpenGL necesarias.**
